@@ -1,0 +1,98 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AttendanceStatus {
+  FULL
+  HALF_MORNING
+  HALF_AFTERNOON
+  ABSENT
+  LEAVE
+}
+
+enum HalfDayType {
+  MORNING
+  AFTERNOON
+}
+
+enum LeaveRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Models
+model Employee {
+  id                String            @id @default(cuid())
+  name              String
+  email             String            @unique
+  annualLeaveDays   Int               @default(25)
+  status            EmployeeStatus    @default(ACTIVE)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  attendanceRecords AttendanceRecord[]
+  leaveRequests     LeaveRequest[]
+  leaveBalance      LeaveBalance?
+  
+  @@map("employees")
+}
+
+model AttendanceRecord {
+  id         String           @id @default(cuid())
+  employeeId String
+  date       DateTime         @db.Date
+  status     AttendanceStatus
+  daysCount  Float            // 0.0, 0.5, 1.0
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  
+  employee   Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  @@unique([employeeId, date])
+  @@map("attendance_records")
+}
+
+model LeaveRequest {
+  id            String            @id @default(cuid())
+  employeeId    String
+  startDate     DateTime          @db.Date
+  endDate       DateTime          @db.Date
+  halfDayStart  HalfDayType?      // morning, afternoon, null
+  halfDayEnd    HalfDayType?      // morning, afternoon, null
+  totalDays     Float             // calculated total including half days
+  reason        String
+  status        LeaveRequestStatus @default(PENDING)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  
+  employee      Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  @@map("leave_requests")
+}
+
+model LeaveBalance {
+  id            String   @id @default(cuid())
+  employeeId    String   @unique
+  allocatedDays Float
+  usedDays      Float    @default(0)
+  updatedAt     DateTime @updatedAt
+  
+  employee      Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  @@map("leave_balances")
+}

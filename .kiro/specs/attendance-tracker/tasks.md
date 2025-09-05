@@ -7,7 +7,7 @@
   - Create environment configuration and example files
   - _Requirements: 10.1, 10.4_
 
-- [ ] 2. Database Schema and Models
+- [x] 2. Database Schema and Models
   - Create Prisma schema with Employee, AttendanceRecord, LeaveRequest, and LeaveBalance models
   - Define enums for AttendanceStatus, EmployeeStatus, HalfDayType, and LeaveRequestStatus
   - Generate and run initial database migration
